@@ -12,3 +12,10 @@ type NUMAZonePlacement struct {
 	Zone   string          `json:"zone"`
 	Amount v1.ResourceList `json:"amount"`
 }
+
+// NUMAMemoryGroupPlacement records reserved memory across a set of NUMA nodes
+// without assigning per-zone amounts to a shared Memory Manager group.
+type NUMAMemoryGroupPlacement struct {
+	MemoryNodes []string        `json:"memoryNodes"`
+	Amount      v1.ResourceList `json:"amount"`
+}
