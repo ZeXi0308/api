@@ -5,6 +5,11 @@ All notable changes to api will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.2.0] - 2026-10-12
+
+### Added
+- Add predicted NUMA memory groups to BindRequests and memory-group annotation constants [#20](https://github.com/kai-scheduler/api/issues/20) [itsomri](https://github.com/itsomri)
+
 ## [v0.1.4] - 2026-10-04
 
 ### Added
