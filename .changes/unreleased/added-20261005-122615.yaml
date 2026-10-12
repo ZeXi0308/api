@@ -1,3 +1,6 @@
 kind: Added
 body: |-
   Add predicted NUMA memory groups to BindRequests and memory-group annotation constants
+custom:
+  Author: "itsomri"
+  Issue: "20"
