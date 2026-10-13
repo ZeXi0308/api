@@ -180,6 +180,12 @@ type SubGroup struct {
 
 	// TopologyConstraint defines the topology constraints for this SubGroup
 	TopologyConstraint *TopologyConstraint `json:"topologyConstraint,omitempty" protobuf:"bytes,4,opt,name=topologyConstraint"`
+
+	// Core marks this SubGroup as part of its parent's core (minimal satisfying set).
+	// Only meaningful when the PodGroup is semi-preemptible.
+	// The number of core SubGroups under one parent must not exceed that parent's effective minSubGroup.
+	// +kubebuilder:validation:Optional
+	Core bool `json:"core,omitempty"`
 }
 
 // PodGroupStatus defines the observed state of PodGroup

@@ -26,6 +26,11 @@ func (e *minSubGroupExceedsChildCountError) Is(target error) bool {
 	return ok
 }
 
+// coreExceedsMinSubGroupError is returned when a parent has more core children than its effective minSubGroup.
+type coreExceedsMinSubGroupError struct{ msg string }
+
+func (e *coreExceedsMinSubGroupError) Error() string { return e.msg }
+
 // parentMinMemberError is returned when minMember is set on a non-leaf SubGroup.
 // On update it is downgraded to a warning for backward compatibility.
 type parentMinMemberError struct{ msg string }

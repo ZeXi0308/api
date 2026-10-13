@@ -32,12 +32,15 @@ func (_ *PodGroup) ValidateCreate(ctx context.Context, podGroup *PodGroup) (admi
 			"namespace", podGroup.Namespace, "name", podGroup.Name, "error", validationErrors.structuralError)
 		return nil, validationErrors.structuralError
 	}
+
+	warnings := ignoredCoreWarnings(&podGroup.Spec)
 	if len(validationErrors.minDefinitionErrors) > 0 {
-		return handleMinDefinitionErrors(ctx, validationErrors.minDefinitionErrors, podGroup,
+		minWarnings, err := handleMinDefinitionErrors(ctx, validationErrors.minDefinitionErrors, podGroup,
 			[]error{&minSubGroupExceedsChildCountError{}})
+		return append(warnings, minWarnings...), err
 	}
 
-	return nil, nil
+	return warnings, nil
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
@@ -61,12 +64,100 @@ func (_ *PodGroup) ValidateUpdate(ctx context.Context, oldPodGroup *PodGroup, po
 		}
 	}
 
+	warnings := ignoredCoreWarnings(&podGroup.Spec)
 	if len(validationErrors.minDefinitionErrors) > 0 {
-		return handleMinDefinitionErrors(ctx, validationErrors.minDefinitionErrors, podGroup,
+		minWarnings, err := handleMinDefinitionErrors(ctx, validationErrors.minDefinitionErrors, podGroup,
 			[]error{&parentMinMemberError{}, &minSubGroupExceedsChildCountError{}})
+		return append(warnings, minWarnings...), err
 	}
 
-	return nil, nil
+	return warnings, nil
+}
+
+// ignoredCoreWarnings warns that core marks have no effect unless the PodGroup is semi-preemptible.
+func ignoredCoreWarnings(spec *PodGroupSpec) admission.Warnings {
+	if spec.Preemptibility == SemiPreemptible {
+		return nil
+	}
+	for i := range spec.SubGroups {
+		if spec.SubGroups[i].Core {
+			return admission.Warnings{fmt.Sprintf(
+				"subgroup %q: core is ignored unless preemptibility is %q", spec.SubGroups[i].Name, SemiPreemptible)}
+		}
+	}
+	return nil
+}
+
+// validateCoreMarks rejects a parent with more core children than its effective minSubGroup
+// (minSubGroup, or the number of children when unset). Marks do not apply to non-semi-preemptible PodGroups.
+func validateCoreMarks(spec *PodGroupSpec) []error {
+	if spec.Preemptibility != SemiPreemptible {
+		return nil
+	}
+
+	childCounts := directChildCounts(spec.SubGroups)
+	subGroups := map[string]*SubGroup{}
+	for i := range spec.SubGroups {
+		subGroups[spec.SubGroups[i].Name] = &spec.SubGroups[i]
+	}
+
+	coreCounts := map[string]int{}
+	var parents []string // first-seen order keeps error output deterministic
+	for _, sg := range spec.SubGroups {
+		if !sg.Core {
+			continue
+		}
+		parent := ptr.Deref(sg.Parent, rootParentKey)
+		if coreCounts[parent] == 0 {
+			parents = append(parents, parent)
+		}
+		coreCounts[parent]++
+	}
+
+	var errs []error
+	for _, parent := range parents {
+		minSubGroup, scope := spec.MinSubGroup, "the PodGroup"
+		if parent != rootParentKey {
+			minSubGroup, scope = subGroups[parent].MinSubGroup, fmt.Sprintf("subgroup %q", parent)
+		}
+		effective := int(ptr.Deref(minSubGroup, int32(childCounts[parent])))
+		if coreCounts[parent] > effective {
+			errs = append(errs, &coreExceedsMinSubGroupError{msg: fmt.Sprintf(
+				"%s has %d core child SubGroups, exceeding its effective minSubGroup (%d)",
+				scope, coreCounts[parent], effective)})
+		}
+	}
+	return errs
+}
+
+// validateCoreImmutability rejects adding, removing or moving a core mark: it changes the protected set.
+func validateCoreImmutability(old, updated *PodGroupSpec) error {
+	oldParents := map[string]string{}
+	for _, sg := range old.SubGroups {
+		if sg.Core {
+			oldParents[sg.Name] = ptr.Deref(sg.Parent, rootParentKey)
+		}
+	}
+	newParents := map[string]string{}
+	for _, sg := range updated.SubGroups {
+		if !sg.Core {
+			continue
+		}
+		newParents[sg.Name] = ptr.Deref(sg.Parent, rootParentKey)
+		oldParent, wasCore := oldParents[sg.Name]
+		if !wasCore {
+			return fmt.Errorf("cannot add core to subgroup %q on a semi-preemptible PodGroup: it would change the protected set of running pods", sg.Name)
+		}
+		if oldParent != newParents[sg.Name] {
+			return fmt.Errorf("cannot move core subgroup %q to another parent on a semi-preemptible PodGroup", sg.Name)
+		}
+	}
+	for _, sg := range old.SubGroups {
+		if _, stillCore := newParents[sg.Name]; sg.Core && !stillCore {
+			return fmt.Errorf("cannot remove core from subgroup %q on a semi-preemptible PodGroup: it would change the protected set of running pods", sg.Name)
+		}
+	}
+	return nil
 }
 
 // validateSemiPreemptibleImmutability rejects increases to minMember or minSubGroup at the root spec and
@@ -117,6 +208,10 @@ func validateSemiPreemptibleImmutability(old, updated *PodGroupSpec) error {
 		}
 	}
 
+	// Switching away from semi-preemptible ignores marks, so only enforce while it stays semi-preemptible.
+	if updated.Preemptibility == SemiPreemptible {
+		return validateCoreImmutability(old, updated)
+	}
 	return nil
 }
 
@@ -172,6 +267,7 @@ func validatePodGroupSpec(spec *PodGroupSpec) *validationErrors {
 	if validationErrors.structuralError != nil {
 		return validationErrors
 	}
+	validationErrors.minDefinitionErrors = append(validationErrors.minDefinitionErrors, validateCoreMarks(spec)...)
 
 	if spec.MinSubGroup != nil {
 		rootCount := countRootSubGroups(spec.SubGroups)
