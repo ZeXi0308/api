@@ -1,0 +1,6 @@
+kind: Added
+body: Add optional core marker to SubGroup, with PodGroup webhook validation
+time: 2026-10-13T15:19:22.494278+03:00
+custom:
+    Author: SiorMeir
+    Issue: "25"
