@@ -1,0 +1,7 @@
+kind: Fixed
+body: |-
+  Allow the binder-translated NvFractions limit next to gpu-fraction when gpu-memory.portion.limit is set
+
+custom:
+    Author: ZeXi0308
+    Issue: "28"
