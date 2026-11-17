@@ -59,10 +59,14 @@ func ValidateGPUFractionRequest(pod *v1.Pod) error {
 	// A legacy gpu-fraction request may accompany the NvFractions limit the binder
 	// derives from gpu-memory.portion.limit at bind time.
 	_, _, hasPortionLimit := ExtractGpuMemoryPortionLimitAnnotation(pod)
-	if req.Limit != nil &&
-		((hasLegacyFraction && !hasPortionLimit) || (hasLegacyMemory && !hasMemoryLimitShorthand)) {
-		return fmt.Errorf("cannot combine %s limit annotation with %s or %s annotation",
-			constants.NvFractionsAnnotationPrefix, constants.GpuFraction, constants.GpuMemory)
+	if req.Limit != nil && hasLegacyFraction && !hasPortionLimit {
+		return fmt.Errorf("cannot combine %s limit annotation with %s annotation unless a %s annotation is set",
+			constants.NvFractionsAnnotationPrefix, constants.GpuFraction,
+			strings.TrimPrefix(constants.GpuMemoryPortionLimitSuffix, "."))
+	}
+	if req.Limit != nil && hasLegacyMemory && !hasMemoryLimitShorthand {
+		return fmt.Errorf("cannot combine %s limit annotation with %s annotation unless the %s annotation is set",
+			constants.NvFractionsAnnotationPrefix, constants.GpuMemory, constants.GpuMemoryLimit)
 	}
 
 	// gpu-fraction and gpu-memory request are mutually exclusive.

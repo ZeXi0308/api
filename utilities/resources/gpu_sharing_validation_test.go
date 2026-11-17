@@ -197,13 +197,23 @@ func TestValidateGPUFractionRequest_TranslatedLimits(t *testing.T) {
 			},
 		},
 		{
+			name: "gpu-fraction.limit shorthand, translated to a portion limit, accepts the NvFractions limit",
+			annotations: map[string]string{
+				constants.GpuFraction:      "0.5",
+				constants.GpuFractionLimit: "0.8",
+				portionLimitKey:            "0.8",
+				nvRequestKey:               "1000Mi",
+				nvLimitKey:                 "1600Mi",
+			},
+		},
+		{
 			name: "gpu-fraction without portion limit rejects an NvFractions limit",
 			annotations: map[string]string{
 				constants.GpuFraction: "0.5",
 				nvRequestKey:          "1000Mi",
 				nvLimitKey:            "1600Mi",
 			},
-			wantErrContaining: "cannot combine",
+			wantErrContaining: "with gpu-fraction annotation unless a gpu-memory.portion.limit annotation is set",
 		},
 		{
 			name: "gpu-memory with gpu-memory.limit accepts the translated NvFractions limit",
@@ -221,7 +231,7 @@ func TestValidateGPUFractionRequest_TranslatedLimits(t *testing.T) {
 				nvRequestKey:        "1000Mi",
 				nvLimitKey:          "1600Mi",
 			},
-			wantErrContaining: "cannot combine",
+			wantErrContaining: "with gpu-memory annotation unless the gpu-memory.limit annotation is set",
 		},
 	}
 
