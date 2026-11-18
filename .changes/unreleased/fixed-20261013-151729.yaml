@@ -1,0 +1,6 @@
+kind: Fixed
+body: |-
+  DRA claims with admin access no longer count as GPU usage
+custom:
+  Author: "brokenlander"
+  Issue: "26"
