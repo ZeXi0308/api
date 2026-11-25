@@ -31,6 +31,10 @@ type Image struct {
 	// +kubebuilder:validation:Optional
 	Tag *string `json:"tag,omitempty"`
 
+	// Digest pins the image to an immutable manifest, for example sha256:<hex>.
+	// +kubebuilder:validation:Optional
+	Digest *string `json:"digest,omitempty"`
+
 	// PullPolicy is the pull policy of the image
 	// +kubebuilder:validation:Optional
 	PullPolicy *v1.PullPolicy `json:"pullPolicy,omitempty"`
@@ -44,5 +48,9 @@ func (i *Image) SetDefaultsWhereNeeded() {
 }
 
 func (i *Image) Url() string {
-	return fmt.Sprintf("%s/%s:%s", *i.Repository, *i.Name, *i.Tag)
+	url := fmt.Sprintf("%s/%s:%s", *i.Repository, *i.Name, *i.Tag)
+	if i.Digest != nil && *i.Digest != "" {
+		url += "@" + *i.Digest
+	}
+	return url
 }

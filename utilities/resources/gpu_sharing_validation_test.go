@@ -99,7 +99,7 @@ func TestValidateGpuMemoryPortionLimitAnnotation(t *testing.T) {
 				CalcGpuMemoryPortionLimitAnnotationForContainer("container-0"): "0.5",
 			},
 			containers: []v1.Container{{Name: "container-0"}},
-			expectErr:  true,
+			expectErr:  false,
 		},
 		{
 			name: "portion limit not smaller than 1",
@@ -336,6 +336,39 @@ func TestValidateGPUFractionRequest_ComputeSharingMode(t *testing.T) {
 
 			err := ValidateGPUFractionRequest(pod)
 
+			if tt.expectErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestValidateFractionLimitShorthand(t *testing.T) {
+	tests := []struct {
+		name      string
+		fraction  string
+		limit     string
+		expectErr bool
+	}{
+		{name: "limit above gpu-fraction", fraction: "0.5", limit: "0.8", expectErr: false},
+		{name: "limit equal to gpu-fraction", fraction: "0.5", limit: "0.5", expectErr: false},
+		{name: "limit below gpu-fraction", fraction: "0.5", limit: "0.4", expectErr: true},
+		{name: "limit of a whole GPU", fraction: "0.5", limit: "1", expectErr: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			pod := &v1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						constants.GpuFraction:      tt.fraction,
+						constants.GpuFractionLimit: tt.limit,
+					},
+				},
+			}
+			err := validateFractionLimitShorthand(pod)
 			if tt.expectErr {
 				assert.Error(t, err)
 			} else {

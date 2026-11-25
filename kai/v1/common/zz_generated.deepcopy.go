@@ -32,6 +32,11 @@ func (in *Image) DeepCopyInto(out *Image) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.Digest != nil {
+		in, out := &in.Digest, &out.Digest
+		*out = new(string)
+		**out = **in
+	}
 	if in.PullPolicy != nil {
 		in, out := &in.PullPolicy, &out.PullPolicy
 		*out = new(v1.PullPolicy)

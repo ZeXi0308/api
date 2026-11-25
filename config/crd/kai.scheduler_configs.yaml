@@ -1038,6 +1038,10 @@ spec:
                       image:
                         description: Image is the configuration of the service image
                         properties:
+                          digest:
+                            description: Digest pins the image to an immutable manifest,
+                              for example sha256:<hex>.
+                            type: string
                           name:
                             description: Name is the name of the image
                             type: string
@@ -1366,6 +1370,10 @@ spec:
                         description: Image is the image used by the resource reservation
                           pods
                         properties:
+                          digest:
+                            description: Digest pins the image to an immutable manifest,
+                              for example sha256:<hex>.
+                            type: string
                           name:
                             description: Name is the name of the image
                             type: string
@@ -2817,6 +2825,10 @@ spec:
                       image:
                         description: Image is the configuration of the service image
                         properties:
+                          digest:
+                            description: Digest pins the image to an immutable manifest,
+                              for example sha256:<hex>.
+                            type: string
                           name:
                             description: Name is the name of the image
                             type: string
@@ -4491,6 +4503,10 @@ spec:
                         description: ScalingPodImage is the image to use for the scaling
                           pod
                         properties:
+                          digest:
+                            description: Digest pins the image to an immutable manifest,
+                              for example sha256:<hex>.
+                            type: string
                           name:
                             description: Name is the name of the image
                             type: string
@@ -5439,6 +5455,10 @@ spec:
                       image:
                         description: Image is the configuration of the service image
                         properties:
+                          digest:
+                            description: Digest pins the image to an immutable manifest,
+                              for example sha256:<hex>.
+                            type: string
                           name:
                             description: Name is the name of the image
                             type: string
@@ -6645,6 +6665,10 @@ spec:
                       image:
                         description: Image is the configuration of the service image
                         properties:
+                          digest:
+                            description: Digest pins the image to an immutable manifest,
+                              for example sha256:<hex>.
+                            type: string
                           name:
                             description: Name is the name of the image
                             type: string
@@ -7756,6 +7780,10 @@ spec:
                       image:
                         description: Image is the configuration of the service image
                         properties:
+                          digest:
+                            description: Digest pins the image to an immutable manifest,
+                              for example sha256:<hex>.
+                            type: string
                           name:
                             description: Name is the name of the image
                             type: string
@@ -8986,6 +9014,10 @@ spec:
                       image:
                         description: Image is the configuration of the service image
                         properties:
+                          digest:
+                            description: Digest pins the image to an immutable manifest,
+                              for example sha256:<hex>.
+                            type: string
                           name:
                             description: Name is the name of the image
                             type: string
@@ -10290,6 +10322,10 @@ spec:
                       image:
                         description: Image is the configuration of the service image
                         properties:
+                          digest:
+                            description: Digest pins the image to an immutable manifest,
+                              for example sha256:<hex>.
+                            type: string
                           name:
                             description: Name is the name of the image
                             type: string
@@ -11496,6 +11532,10 @@ spec:
                       image:
                         description: Image is the configuration of the service image
                         properties:
+                          digest:
+                            description: Digest pins the image to an immutable manifest,
+                              for example sha256:<hex>.
+                            type: string
                           name:
                             description: Name is the name of the image
                             type: string

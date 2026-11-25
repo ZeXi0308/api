@@ -113,8 +113,8 @@ func validateFractionLimitShorthand(pod *v1.Pod) error {
 	if err != nil || limit <= 0 || limit >= 1 || math.IsNaN(limit) {
 		return fmt.Errorf("%s annotation value must be a positive number smaller than 1.0. Got %s", constants.GpuFractionLimit, rawLimit)
 	}
-	if limit <= fraction {
-		return fmt.Errorf("%s annotation value (%s) must be greater than %s annotation value (%s)",
+	if limit < fraction {
+		return fmt.Errorf("%s annotation value (%s) must be greater than or equal to %s annotation value (%s)",
 			constants.GpuFractionLimit, rawLimit, constants.GpuFraction, rawFraction)
 	}
 	return nil
@@ -172,8 +172,8 @@ func validateGpuMemoryNvFractionsConsistency(pod *v1.Pod) error {
 
 // validateGpuMemoryPortionLimitAnnotation validates the kai.scheduler
 // gpu-memory.portion.limit annotation: it may only be used together with
-// gpu-fraction, on the same container, as a fraction strictly greater than
-// gpu-fraction and strictly smaller than 1.0, with at most 5 decimal digits.
+// gpu-fraction, on the same container, as a fraction greater than or equal
+// to gpu-fraction and strictly smaller than 1.0, with at most 5 decimal digits.
 func validateGpuMemoryPortionLimitAnnotation(pod *v1.Pod) error {
 	containerName, rawValue, found := ExtractGpuMemoryPortionLimitAnnotation(pod)
 	if !found {
@@ -205,8 +205,8 @@ func validateGpuMemoryPortionLimitAnnotation(pod *v1.Pod) error {
 		return fmt.Errorf("%s annotation value must be a positive number smaller than 1.0", annotationKey)
 	}
 
-	if portionLimit <= gpuFraction {
-		return fmt.Errorf("%s annotation value (%s) must be greater than %s annotation value (%s)",
+	if portionLimit < gpuFraction {
+		return fmt.Errorf("%s annotation value (%s) must be greater than or equal to %s annotation value (%s)",
 			annotationKey, rawValue, constants.GpuFraction, gpuFractionStr)
 	}
 
